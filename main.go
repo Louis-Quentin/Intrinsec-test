@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,14 +10,45 @@ import (
 	"regexp"
 )
 
-func displayResults(data [][]string) {
+type Article struct {
+	Title string `json:"title"`
+	Link  string `json:"link"`
+}
 
-	fmt.Println("Results");
+func saveAsJSON(articles []Article) {
+
+	filename := "Articles.json";
+	file, err := os.Create(filename)
+
+	if err != nil {
+		log.Fatalf("Error creating file: %v", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	err = encoder.Encode(articles);
+
+	if err != nil {
+		log.Fatalf("Error encoding JSON: %v", err)
+	}
+}
+
+func saveResults(data [][]string) {
+
+	var articles []Article;
+
 	for _, result := range data {
 		link := result[1];
 		title := result[2];
 		fmt.Printf("Title = %s\nLien = %s\n\n", title, link);
+
+		articles = append(articles, Article{
+			Title: title,
+			Link:  link,
+		});
 	}
+	saveAsJSON(articles);
 }
 
 func parseData(body string) [][]string {
@@ -50,5 +83,5 @@ func fetchData() [][]string {
 func main() {
 
 	res := fetchData();
-	displayResults(res);
+	saveResults(res);
 }
